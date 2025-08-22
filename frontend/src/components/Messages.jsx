@@ -62,9 +62,11 @@ import { Link } from 'react-router-dom';
 import { Button } from './ui/button';
 import { useSelector } from 'react-redux';
 import useGetAllMessages from '@/hooks/useGetAllMessages';
+import useGetRTM from '@/hooks/useGetRTM';
 
 const Messages = ({ selectedUser }) => {
   useGetAllMessages();
+  // useGetRTM();
   const { messages } = useSelector((state) => state.chat);
   const { user } = useSelector((state) => state.auth);
   const messagesEndRef = useRef(null);

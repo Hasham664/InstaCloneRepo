@@ -58,9 +58,11 @@ const useGetAllMessages = () => {
         );
 
         if (response.data.success) {
-          // FIXED: Clear messages first, then set new ones
+          // FIXED: Clear messages first, then set new ones          
           dispatch(setMessages(response.data.messages));
-        //  dispatch(setMessages([...messages, newMessage]));
+          
+        //  dispatch(setMessages([...messages, ...response.data.messages]));
+         
         }
       } catch (error) {
         console.error('Error fetching messages:', error);

@@ -46,23 +46,42 @@ const useGetRTM = () => {
         createdAt: newMessage.createdAt || new Date().toISOString(),
       };
 
-      // Only add to messages if it's for the currently selected chat
-      if (
-        selectedUser &&
-        (messageWithTimestamp.senderId === selectedUser._id ||
-          messageWithTimestamp.receiverId === selectedUser._id)
-      ) {
-        dispatch(addMessage(messageWithTimestamp));
+      console.log('New message received:', messageWithTimestamp);
+      console.log('Current user ID:', user?._id);
+      console.log('Selected user ID:', selectedUser?._id);
+      console.log('Message sender ID:', messageWithTimestamp.senderId);
+      console.log('Message receiver ID:', messageWithTimestamp.receiverId);
+
+      // FIXED: Add message to current chat if it involves the selected user
+      if (selectedUser && user) {
+        const isMessageForCurrentChat =
+          // Message is from selected user to current user (receiver)
+          (messageWithTimestamp.senderId === selectedUser._id &&
+            messageWithTimestamp.receiverId === user._id) ||
+          // Message is from current user to selected user (sender - but this is handled by sendMessageHandler)
+          (messageWithTimestamp.senderId === user._id &&
+            messageWithTimestamp.receiverId === selectedUser._id);
+
+        if (isMessageForCurrentChat) {
+          dispatch(addMessage(messageWithTimestamp));
+        }
       }
 
       // Always update conversations for real-time preview
       dispatch(updateConversationOnNewMessage(messageWithTimestamp));
     };
 
+    const handleUserStatusUpdate = (data) => {
+      console.log('User status update:', data);
+      // Handle online/offline status updates if needed
+    };
+
     socket.on('newMessage', handleNewMessage);
+    socket.on('userStatusUpdate', handleUserStatusUpdate);
 
     return () => {
       socket?.off('newMessage', handleNewMessage);
+      socket?.off('userStatusUpdate', handleUserStatusUpdate);
     };
   }, [socket, selectedUser, dispatch, user]);
 };

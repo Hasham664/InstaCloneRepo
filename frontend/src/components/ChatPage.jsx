@@ -240,43 +240,49 @@ const ChatPage = () => {
   const { onlineUsers, conversations } = useSelector((state) => state.chat);
   const dispatch = useDispatch();
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Online users:', onlineUsers);
+    console.log('Conversations:', conversations);
+    console.log('Current user:', user);
+  }, [onlineUsers, conversations, user]);
+
   // Custom hooks
   useGetConversations();
   useGetRTM();
 
-   const sendMessageHandler = async (receiverId) => {
-     try {
-       const res = await axios.post(
-         `${BACKENDURL}/message/send/${receiverId}`,
-         { textMessage },
-         {
-           headers: { 'Content-Type': 'application/json' },
-           withCredentials: true,
-         }
-       );
+  const sendMessageHandler = async (receiverId) => {
+    try {
+      const res = await axios.post(
+        `${BACKENDURL}/message/send/${receiverId}`,
+        { textMessage },
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true,
+        }
+      );
 
-       if (res.data.success) {
-         const messageWithTimestamp = {
-           ...res.data.newMessage,
-           createdAt: res.data.newMessage.createdAt || new Date().toISOString(),
-         };
+      if (res.data.success) {
+        const messageWithTimestamp = {
+          ...res.data.newMessage,
+          createdAt: res.data.newMessage.createdAt || new Date().toISOString(),
+        };
 
-         dispatch(addMessage(messageWithTimestamp));
-         setTextMessage('');
+        dispatch(addMessage(messageWithTimestamp));
+        setTextMessage('');
 
-         // Update conversation last message - Fixed: use userId instead of conversationId
-         dispatch(
-           updateConversationLastMessage({
-             userId: receiverId,
-             message: messageWithTimestamp,
-           })
-         );
-       }
-     } catch (error) {
-       console.error('Error sending message:', error);
-     }
-   };
-
+        // Update conversation last message - Fixed: use userId instead of conversationId
+        dispatch(
+          updateConversationLastMessage({
+            userId: receiverId,
+            message: messageWithTimestamp,
+          })
+        );
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
 
   useEffect(() => {
     return () => {
@@ -298,7 +304,17 @@ const ChatPage = () => {
         <div className='overflow-y-auto h-[76%] md:h-[80vh]'>
           {conversations?.map((conversation) => {
             const otherUser = conversation.user;
-            const isOnline = onlineUsers.includes(otherUser?._id);
+            // FIXED: Better online status checking
+            const isOnline =
+              onlineUsers.includes(otherUser?._id?.toString()) ||
+              onlineUsers.includes(otherUser?._id);
+
+            // Debug logging for online status
+            console.log(
+              `User ${otherUser?.username} (ID: ${otherUser?._id}) online status:`,
+              isOnline
+            );
+            console.log('Online users array:', onlineUsers);
 
             return (
               <div
@@ -363,6 +379,19 @@ const ChatPage = () => {
             <Link to={`/profile/${selectedUser?._id}`}>
               <div className='flex flex-col'>
                 <p className='font-medium'>{selectedUser?.username}</p>
+                <p
+                  className={`text-xs ${
+                    onlineUsers.includes(selectedUser?._id?.toString()) ||
+                    onlineUsers.includes(selectedUser?._id)
+                      ? 'text-green-500'
+                      : 'text-red-500'
+                  }`}
+                >
+                  {onlineUsers.includes(selectedUser?._id?.toString()) ||
+                  onlineUsers.includes(selectedUser?._id)
+                    ? 'Online'
+                    : 'Offline'}
+                </p>
               </div>
             </Link>
           </div>
