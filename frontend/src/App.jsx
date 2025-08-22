@@ -49,45 +49,87 @@ const router = createBrowserRouter([
 ]);
 function App() {
   const BACKENDURL = import.meta.env.VITE_BACKEND_URL;
-  const {user} = useSelector((state) => state.auth);
-  // const {socket} = useSelector((state) => state.socketio);
+  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  
 
-useEffect(() => {
-  if (user) {
-    // Connect socket
-    const socketio = io(import.meta.env.VITE_BACKEND_URL, {
-      query: { userId: user?._id },
-      transports: ['websocket'],
-    });
-    dispatch(setSocket(socketio));
+  useEffect(() => {
+    if (user) {
+      console.log('Setting up socket for user:', user._id);
 
-    // Real-time
-    socketio.on('getOnlineUsers', (onlineUsers) => {
-      dispatch(setOnlineUsers(onlineUsers));
-    });
-    socketio.on('notification', (notification) => {
-      dispatch(setLikeNotification(notification));
-    });
-
-    // Fetch unread notifications from DB
-    axios.get(`${BACKENDURL}/post/notifications`, {
+      // Connect socket with proper configuration
+      const socketio = io(BACKENDURL, {
+        query: { userId: user._id },
+        transports: ['websocket', 'polling'], // Allow both transports
         withCredentials: true,
-      })
-      .then((res) => {
-        res.data.forEach((notif) => {
-          dispatch(setLikeNotification(notif));
-        });
-      })
-      .catch(console.error);
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      });
 
-    return () => {
-      socketio?.close();
+      // Store socket in Redux
+      dispatch(setSocket(socketio));
+
+      // Socket connection events for debugging
+      socketio.on('connect', () => {
+        console.log('✅ Socket connected:', socketio.id);
+        console.log('👤 User ID:', user._id);
+
+        // Explicitly join the user to socket rooms
+        socketio.emit('addUser', user._id);
+      });
+
+      socketio.on('connect_error', (error) => {
+        console.error('❌ Socket connection error:', error);
+      });
+
+      socketio.on('disconnect', (reason) => {
+        console.log('🔌 Socket disconnected:', reason);
+      });
+
+      // Listen for online users updates
+      socketio.on('getOnlineUsers', (onlineUsers) => {
+        console.log('👥 Received online users:', onlineUsers);
+        console.log('📊 Online users count:', onlineUsers.length);
+        dispatch(setOnlineUsers(onlineUsers));
+      });
+
+      // Listen for new messages (for real-time chat)
+      socketio.on('newMessage', (newMessage) => {
+        console.log('💬 New message received via socket:', newMessage);
+      });
+
+      // Listen for notifications
+      socketio.on('notification', (notification) => {
+        console.log('🔔 Notification received:', notification);
+        dispatch(setLikeNotification(notification));
+      });
+
+      // Fetch unread notifications from DB
+      axios
+        .get(`${BACKENDURL}/post/notifications`, {
+          withCredentials: true,
+        })
+        .then((res) => {
+          res.data.forEach((notif) => {
+            dispatch(setLikeNotification(notif));
+          });
+        })
+        .catch(console.error);
+
+      // Cleanup function
+      return () => {
+        console.log('🧹 Cleaning up socket connection');
+        socketio.emit('removeUser', user._id);
+        socketio.close();
+        dispatch(setSocket(null));
+        dispatch(setOnlineUsers([])); // Clear online users when disconnecting
+      };
+    } else {
+      // Clear socket and online users when user logs out
       dispatch(setSocket(null));
-    };
-  }
-}, [user, dispatch]);
+      dispatch(setOnlineUsers([]));
+    }
+  }, [user, dispatch, BACKENDURL]);
 
   return (
   <div>

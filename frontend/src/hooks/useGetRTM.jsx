@@ -37,51 +37,74 @@ const useGetRTM = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !user) {
+      console.log('No socket connection or user in useGetRTM');
+      return;
+    }
+
+    console.log('🔄 Setting up real-time message listeners');
+    console.log('👤 Current user:', user._id);
+    console.log('💬 Selected user:', selectedUser?._id);
+    console.log('🔗 Socket connected:', socket.connected);
 
     const handleNewMessage = (newMessage) => {
+      console.log('=== 💬 NEW MESSAGE RECEIVED ===');
+      console.log('📨 Message:', newMessage);
+      console.log('👤 From:', newMessage.senderId);
+      console.log('👤 To:', newMessage.receiverId);
+      console.log('🆔 Current user ID:', user._id);
+      console.log('🆔 Selected user ID:', selectedUser?._id);
+
       // Add timestamp if not present
       const messageWithTimestamp = {
         ...newMessage,
         createdAt: newMessage.createdAt || new Date().toISOString(),
       };
 
-      console.log('New message received:', messageWithTimestamp);
-      console.log('Current user ID:', user?._id);
-      console.log('Selected user ID:', selectedUser?._id);
-      console.log('Message sender ID:', messageWithTimestamp.senderId);
-      console.log('Message receiver ID:', messageWithTimestamp.receiverId);
+      // Check if this message involves the current user (either as sender or receiver)
+      const isMessageForMe =
+        messageWithTimestamp.receiverId === user._id ||
+        messageWithTimestamp.senderId === user._id;
 
-      // FIXED: Add message to current chat if it involves the selected user
-      if (selectedUser && user) {
-        const isMessageForCurrentChat =
-          // Message is from selected user to current user (receiver)
-          (messageWithTimestamp.senderId === selectedUser._id &&
-            messageWithTimestamp.receiverId === user._id) ||
-          // Message is from current user to selected user (sender - but this is handled by sendMessageHandler)
-          (messageWithTimestamp.senderId === user._id &&
-            messageWithTimestamp.receiverId === selectedUser._id);
-
-        if (isMessageForCurrentChat) {
-          dispatch(addMessage(messageWithTimestamp));
-        }
+      if (!isMessageForMe) {
+        console.log('❌ Message not for current user, ignoring');
+        return;
       }
 
-      // Always update conversations for real-time preview
+      // Check if this message is for the currently selected chat
+      const isForCurrentChat =
+        selectedUser &&
+        // Message from selected user to current user (receiving)
+        ((messageWithTimestamp.senderId === selectedUser._id &&
+          messageWithTimestamp.receiverId === user._id) ||
+          // Message from current user to selected user (sending - backup)
+          (messageWithTimestamp.senderId === user._id &&
+            messageWithTimestamp.receiverId === selectedUser._id));
+
+      console.log('✅ Is for current chat:', isForCurrentChat);
+
+      // Add to current chat messages if it belongs to this chat
+      if (isForCurrentChat) {
+        console.log('➕ Adding message to current chat');
+        dispatch(addMessage(messageWithTimestamp));
+      }
+
+      // Always update conversations for preview
+      console.log('🔄 Updating conversation preview');
       dispatch(updateConversationOnNewMessage(messageWithTimestamp));
     };
 
-    const handleUserStatusUpdate = (data) => {
-      console.log('User status update:', data);
-      // Handle online/offline status updates if needed
-    };
-
+    // Listen for new messages
     socket.on('newMessage', handleNewMessage);
-    socket.on('userStatusUpdate', handleUserStatusUpdate);
 
+    // Test socket connection
+    console.log('🧪 Testing socket connection...');
+    socket.emit('ping', 'test');
+
+    // Cleanup function
     return () => {
+      console.log('🧹 Cleaning up real-time message listeners');
       socket?.off('newMessage', handleNewMessage);
-      socket?.off('userStatusUpdate', handleUserStatusUpdate);
     };
   }, [socket, selectedUser, dispatch, user]);
 };
