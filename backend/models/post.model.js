@@ -1,3 +1,4 @@
+import { timeStamp } from 'console';
 import mongoose from 'mongoose';
 
 const postSchema = new mongoose.Schema({
@@ -27,6 +28,7 @@ const postSchema = new mongoose.Schema({
       ref: 'Comment',
     },
   ],
-});
+},  { timestamps: true }
+);
 
 export const Post = mongoose.model('Post', postSchema);

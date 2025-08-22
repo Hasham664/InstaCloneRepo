@@ -13,7 +13,7 @@ const io = new Server(server, {
 
 
 const userSocketMap = {};
-console.log('userSocketMap now:', userSocketMap);
+// console.log('userSocketMap now:', userSocketMap);
 
 // export const GetReciverSocketId = (reciverId) => userSocketMap[reciverId] || null;
 export const getReceiverSocketId = (receiverId) => userSocketMap[receiverId] || null;

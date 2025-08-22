@@ -33,7 +33,21 @@ const Profile = () => {
               />
             </Avatar>
             <div className='hidden max-md:block'>
-              <p className=''> {userProfile?.username}</p>
+              <div className='flex items-center gap-6'>
+                <p className=''> {userProfile?.username}</p>
+                {isLoggedInUserProfile ? (
+                  <>
+                   
+                  </>
+                ) : (
+                  <Button
+                    variant='secondary'
+                    className='h-8 text-white bg-blue-600 hover:bg-blue-500'
+                  >
+                    Follow
+                  </Button>
+                )}
+              </div>
               <div className='flex items-center gap-4 mt-1'>
                 <p className=''>
                   <span className='font-semibold'>
@@ -86,7 +100,7 @@ const Profile = () => {
                 ) : (
                   <Button
                     variant='secondary'
-                    className='h-8 text-white bg-blue-600 hover:bg-blue-500'
+                    className='h-8 text-white bg-blue-600 hover:bg-blue-500 max-md:hidden'
                   >
                     Follow
                   </Button>
@@ -149,7 +163,10 @@ const Profile = () => {
           </div>
           <div className='grid gap-2 mb-10 max-sm:grid-cols-2 sm:grid-cols-3'>
             {displayedPosts?.map((post) => (
-              <div key={post._id} className='relative bg-black cursor-pointer  group'>
+              <div
+                key={post._id}
+                className='relative bg-black cursor-pointer group'
+              >
                 <img
                   src={post.image}
                   alt={post.image}
