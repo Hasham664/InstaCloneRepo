@@ -86,7 +86,6 @@ function App() {
         console.log('🔔 Notification received:', notification);
         dispatch(setLikeNotification(notification));
       });
-
       // Fetch unread notifications from DB
       // axios.get(`${BACKENDURL}/post/notifications`, {
       //     withCredentials: true,
