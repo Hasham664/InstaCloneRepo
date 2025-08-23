@@ -76,7 +76,7 @@ const Messages = ({ selectedUser }) => {
   }, [messages]);
 
   return (
-    <div className='relative z-50 flex-1 p-4 overflow-y-auto'>
+    <div className='relative flex-1 p-4 overflow-y-auto'>
       <div className='flex justify-center'>
         <div className='flex flex-col items-center justify-center'>
           <Avatar className='w-20 h-20 mb-4'>
