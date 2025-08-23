@@ -42,18 +42,7 @@ const useGetRTM = () => {
       return;
     }
 
-    console.log('🔄 Setting up real-time message listeners');
-    console.log('👤 Current user:', user._id);
-    console.log('💬 Selected user:', selectedUser?._id);
-    console.log('🔗 Socket connected:', socket.connected);
-
     const handleNewMessage = (newMessage) => {
-      console.log('=== 💬 NEW MESSAGE RECEIVED ===');
-      console.log('📨 Message:', newMessage);
-      console.log('👤 From:', newMessage.senderId);
-      console.log('👤 To:', newMessage.receiverId);
-      console.log('🆔 Current user ID:', user._id);
-      console.log('🆔 Selected user ID:', selectedUser?._id);
 
       // Add timestamp if not present
       const messageWithTimestamp = {
@@ -62,8 +51,8 @@ const useGetRTM = () => {
       };
 
       // Check if this message involves the current user (either as sender or receiver)
-      const isMessageForMe =
-        messageWithTimestamp.receiverId === user._id ||
+      const isMessageForMe = 
+        messageWithTimestamp.receiverId === user._id || 
         messageWithTimestamp.senderId === user._id;
 
       if (!isMessageForMe) {
@@ -72,38 +61,29 @@ const useGetRTM = () => {
       }
 
       // Check if this message is for the currently selected chat
-      const isForCurrentChat =
-        selectedUser &&
+      const isForCurrentChat = selectedUser && (
         // Message from selected user to current user (receiving)
-        ((messageWithTimestamp.senderId === selectedUser._id &&
-          messageWithTimestamp.receiverId === user._id) ||
-          // Message from current user to selected user (sending - backup)
-          (messageWithTimestamp.senderId === user._id &&
-            messageWithTimestamp.receiverId === selectedUser._id));
-
-      console.log('✅ Is for current chat:', isForCurrentChat);
+        (messageWithTimestamp.senderId === selectedUser._id && 
+         messageWithTimestamp.receiverId === user._id) ||
+        // Message from current user to selected user (sending - backup)
+        (messageWithTimestamp.senderId === user._id && 
+         messageWithTimestamp.receiverId === selectedUser._id)
+      );
 
       // Add to current chat messages if it belongs to this chat
       if (isForCurrentChat) {
-        console.log('➕ Adding message to current chat');
         dispatch(addMessage(messageWithTimestamp));
       }
 
       // Always update conversations for preview
-      console.log('🔄 Updating conversation preview');
       dispatch(updateConversationOnNewMessage(messageWithTimestamp));
     };
 
-    // Listen for new messages
-    socket.on('newMessage', handleNewMessage);
 
-    // Test socket connection
-    console.log('🧪 Testing socket connection...');
     socket.emit('ping', 'test');
 
     // Cleanup function
     return () => {
-      console.log('🧹 Cleaning up real-time message listeners');
       socket?.off('newMessage', handleNewMessage);
     };
   }, [socket, selectedUser, dispatch, user]);

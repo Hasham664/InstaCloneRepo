@@ -53,8 +53,6 @@ function App() {
   const dispatch = useDispatch();
   useEffect(() => {
     if (user) {
-      console.log('Setting up socket for user:', user._id);
-
       // Connect socket with proper configuration
       const socketio = io(BACKENDURL, {
         query: { userId: user._id },
@@ -70,32 +68,18 @@ function App() {
 
       // Socket connection events for debugging
       socketio.on('connect', () => {
-        console.log('✅ Socket connected:', socketio.id);
-        console.log('👤 User ID:', user._id);
-
-        // Explicitly join the user to socket rooms
         socketio.emit('addUser', user._id);
       });
 
-      socketio.on('connect_error', (error) => {
-        console.error('❌ Socket connection error:', error);
-      });
-
-      socketio.on('disconnect', (reason) => {
-        console.log('🔌 Socket disconnected:', reason);
-      });
+  
 
       // Listen for online users updates
       socketio.on('getOnlineUsers', (onlineUsers) => {
-        console.log('👥 Received online users:', onlineUsers);
-        console.log('📊 Online users count:', onlineUsers.length);
         dispatch(setOnlineUsers(onlineUsers));
       });
 
       // Listen for new messages (for real-time chat)
-      socketio.on('newMessage', (newMessage) => {
-        console.log('💬 New message received via socket:', newMessage);
-      });
+    ;
 
       // Listen for notifications
       socketio.on('notification', (notification) => {
@@ -104,20 +88,21 @@ function App() {
       });
 
       // Fetch unread notifications from DB
-      axios
-        .get(`${BACKENDURL}/post/notifications`, {
-          withCredentials: true,
-        })
-        .then((res) => {
-          res.data.forEach((notif) => {
-            dispatch(setLikeNotification(notif));
-          });
-        })
-        .catch(console.error);
+      // axios.get(`${BACKENDURL}/post/notifications`, {
+      //     withCredentials: true,
+      //   })
+      //   .then((res) => {
+      //     const { notifications } = res.data;
+      //     if (Array.isArray(notifications)) {
+      //       notifications.forEach((notif) => {
+      //         dispatch(setLikeNotification(notif));
+      //       });
+      //     }
+      //   })
+      //   .catch(console.error);
 
       // Cleanup function
       return () => {
-        console.log('🧹 Cleaning up socket connection');
         socketio.emit('removeUser', user._id);
         socketio.close();
         dispatch(setSocket(null));

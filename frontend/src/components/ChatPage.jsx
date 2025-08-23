@@ -240,13 +240,6 @@ const ChatPage = () => {
   const { onlineUsers, conversations } = useSelector((state) => state.chat);
   const dispatch = useDispatch();
 
-  // Debug logging
-  useEffect(() => {
-    console.log('Online users:', onlineUsers);
-    console.log('Conversations:', conversations);
-    console.log('Current user:', user);
-  }, [onlineUsers, conversations, user]);
-
   // Custom hooks
   useGetConversations();
   useGetRTM();
@@ -308,13 +301,6 @@ const ChatPage = () => {
             const isOnline =
               onlineUsers.includes(otherUser?._id?.toString()) ||
               onlineUsers.includes(otherUser?._id);
-
-            // Debug logging for online status
-            console.log(
-              `User ${otherUser?.username} (ID: ${otherUser?._id}) online status:`,
-              isOnline
-            );
-            console.log('Online users array:', onlineUsers);
 
             return (
               <div
