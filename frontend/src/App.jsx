@@ -48,10 +48,9 @@ const router = createBrowserRouter([
   },
 ]);
 function App() {
-  const BACKENDURL = import.meta.env.VITE_BACKEND_URL;
+  const BACKENDURL = import.meta.env.VITE_SOCKET_URL;
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-
   useEffect(() => {
     if (user) {
       console.log('Setting up socket for user:', user._id);
